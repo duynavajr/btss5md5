@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="https://code.jquery.com/jquery-3.7.0.js"
+          integrity="sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+<h1>TodoList</h1>
+<form action="" id="form">
+  <input type="text" placeholder="Thêm công việc" id="name">
+  <br>
+  <button id="btn">ADD</button>
+</form>
+
+<table border="1">
+  <thead>
+  <th>#</th>
+  <th>Công Việc</th>
+  <th>Trạng Thái</th>
+  <th colspan="2">Hành Động</th>
+  </thead>
+  <tbody id="list">
+
+  </tbody>
+</table>
+
+
+<script>
+  const getTodo = () => {
+    $.ajax({
+      method: "GET",
+      url: "http://localhost:8080/api/v1/todo",
+      dataType: "JSON",
+      success: (response) => {
+        let _html = ``;
+        response.forEach((element, index) => {
+          _html += `<tr>
+                            <td>${index + 1}</td>
+                            <td>${element.name}</td>
+                            <td>${element.status}</td>
+                            <td>
+                                <button type="button" class="btn-edit" data-id="${element.id}">Edit</button>
+                                <button type="button" class="btn-delete" data-id="${element.id}" data-nameEdit="${element.name}">Delete</button>
+                            </td>
+                            </tr>
+                       `;
+        });
+        $('#list').html(_html);
+      },
+      error: (err) => {
+        console.log(err);
+      }
+    });
+  }
+
+  getTodo();
+</script>
+<script>
+  $("#btn").click(function (e) {
+    let name = $('#name').val();
+    let _data = { name: name, status: 1 };
+    _data = JSON.stringify(_data);
+    $.ajax({
+      method: "POST",
+      url: "http://localhost:8080/api/v1/todo",
+      dataType: "JSON",
+      contentType: "application/json",
+      data: _data,
+      success: (response) => {
+        Swal.fire({
+          position: "top-center",
+          icon: "success",
+          title: "Thêm mới thành công",
+          showConfirmButton: false,
+          timer: 1500
+        });
+        $("#name").val("");
+        getTodo();
+      },
+      error: (err) => {
+        console.log(err);
+      }
+    })
+    e.preventDefault();
+  })
+</script>
+
+
+<script>
+  $(document).on("click", ".btn-delete", function () {
+    let id = $(this).data("id");
+    $.ajax({
+      method: "DELETE",
+      url: "http://localhost:8080/api/v1/todo/" + id,
+      dataType: "JSON",
+      id: id,
+      success: (response) => {
+        console.log(response);
+        Swal.fire({
+          position: "top-center",
+          icon: "success",
+          title: "Xóa thành công",
+          showConfirmButton: false,
+          timer: 1500,
+        });
+        getTodo();
+      },
+      error: (err) => {
+        console.log(err);
+      },
+    });
+  });
+</script>
+
+<script>
+  $(document).on("click", ".btn-edit", function (e) {
+            let id = $(this).data("id");
+
+            $.ajax({
+              method: "GET",
+              url: "http://localhost:8080/api/v1/todo/" + id,
+              dataType: "JSON",
+              id: id,
+              success: (response) => {
+                console.log(response)
+                let _html = ``;
+                _html += `
+                        <input type="hidden"  value="${response.id}" id="idEdit">
+                        <input type="text" value="${response.name}" id="name">
+                        <br>
+                        <button type="submit" id="btn-update">UPDATE</button>
+                       `;
+                $('#form').html(_html);
+              },
+              error: (err) => {
+                console.log(err);
+              }
+            });
+          }
+
+  )
+</script>
+
+
+<script>
+  $(document).on("click", "#btn-update", function (e) {
+    let id = $('#idEdit').val();
+    console.log(id);
+    let name = $('#name').val();
+    let _data = { name: name, status: 1 };
+    _data = JSON.stringify(_data);
+
+    $.ajax({
+      method: "PUT",
+      url: "http://localhost:8080/api/v1/todo/" + id,
+      dataType: "JSON",
+      contentType: "application/json",
+      data: _data,
+      success: (response) => {
+        console.log(response);
+        Swal.fire({
+          position: "top-center",
+          icon: "success",
+          title: "Sửa thành công",
+          showConfirmButton: false,
+          timer: 1500,
+        });
+        $("#name").val("");
+        getTodo();
+      },
+      error: (err) => {
+        console.log(err);
+      },
+    });
+    e.preventDefault();
+  });
+</script>
+
+
+
+
+
+</body>
+
+</html>
